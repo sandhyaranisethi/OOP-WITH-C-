@@ -1,0 +1,292 @@
+/*
+ * ============================================================
+ *  SUSTAINABLE E-COMMERCE PACKAGING AND INVENTORY MANAGEMENT SYSTEM
+ *  DSA0101 - Object Oriented Programming with C++
+ *
+ *  Modules:
+ *    1. Inventory Tracking   -> class PackagingItem
+ *    2. Smart Package Select -> class Package
+ *    3. Supplier Reorder     -> class Supplier
+ *
+ *  OOP concepts used: Classes, Objects, Encapsulation,
+ *  Constructors, Member Functions, Vectors of objects.
+ * ============================================================
+ */
+
+#include <iostream>
+#include <vector>
+#include <string>
+#include <limits>
+using namespace std;
+
+/* ---------------------------------------------------------------
+   MODULE 1: INVENTORY TRACKING
+   Tracks packaging materials and available quantities, and gives
+   a low-stock alert when quantity falls below the minimum level.
+--------------------------------------------------------------- */
+class PackagingItem {
+private:
+    int id;
+    string name;
+    int quantity;
+    int minStock;
+
+public:
+    PackagingItem(int i, string n, int q, int m) {
+        id = i;
+        name = n;
+        quantity = q;
+        minStock = m;
+    }
+
+    int getId() const { return id; }
+    string getName() const { return name; }
+    int getQuantity() const { return quantity; }
+
+    void display() const {
+        cout << "Package ID: " << id << endl;
+        cout << "Package Name: " << name << endl;
+        cout << "Quantity: " << quantity << endl;
+
+        if (quantity <= minStock)
+            cout << "Status: Low Stock" << endl;
+        else
+            cout << "Status: Stock Available" << endl;
+    }
+};
+
+/* ---------------------------------------------------------------
+   MODULE 2: SMART PACKAGE SELECTION
+   Selects the smallest suitable package for a product based on
+   its length, width and height.
+--------------------------------------------------------------- */
+class Package {
+public:
+    string name;
+    int length, width, height;
+
+    Package(string n, int l, int w, int h) {
+        name = n;
+        length = l;
+        width = w;
+        height = h;
+    }
+
+    bool isSuitable(int l, int w, int h) const {
+        return length >= l &&
+               width  >= w &&
+               height >= h;
+    }
+};
+
+/* ---------------------------------------------------------------
+   MODULE 3: SUPPLIER REORDER
+   Checks the packaging stock and calculates the required reorder
+   quantity when the stock reaches the minimum level.
+--------------------------------------------------------------- */
+class Supplier {
+public:
+    string name;
+    int stock, minStock, maxStock;
+
+    Supplier(string n, int s, int mn, int mx) {
+        name = n;
+        stock = s;
+        minStock = mn;
+        maxStock = mx;
+    }
+
+    void checkReorder() const {
+        cout << "Supplier: " << name << endl;
+        if (stock <= minStock) {
+            int reorder = maxStock - stock;
+            cout << "Reorder Required!" << endl;
+            cout << "Reorder Quantity: " << reorder << endl;
+        } else {
+            cout << "No Reorder Required." << endl;
+        }
+    }
+};
+
+/* ---------------------------------------------------------------
+   Helper: clear a bad cin state and discard the rest of the line
+--------------------------------------------------------------- */
+void clearInput() {
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
+/* ---------------------------------------------------------------
+   MODULE 1 MENU: Inventory Tracking
+--------------------------------------------------------------- */
+void inventoryMenu(vector<PackagingItem>& items) {
+    int choice;
+    do {
+        cout << "\n--- INVENTORY TRACKING ---\n";
+        cout << "1. Add Packaging Item\n";
+        cout << "2. Display All Items\n";
+        cout << "0. Back to Main Menu\n";
+        cout << "Enter choice: ";
+        cin >> choice;
+
+        if (cin.fail()) { clearInput(); choice = -1; }
+
+        if (choice == 1) {
+            int id, quantity, minStock;
+            string name;
+
+            cout << "Enter Package ID: ";
+            cin >> id;
+            cout << "Enter Package Name: ";
+            cin >> name;
+            cout << "Enter Quantity: ";
+            cin >> quantity;
+            cout << "Enter Minimum Stock Level: ";
+            cin >> minStock;
+
+            items.push_back(PackagingItem(id, name, quantity, minStock));
+            cout << "Item added successfully.\n";
+        }
+        else if (choice == 2) {
+            if (items.empty()) {
+                cout << "No packaging items recorded yet.\n";
+            } else {
+                cout << "\n--- CURRENT INVENTORY ---\n";
+                for (size_t idx = 0; idx < items.size(); idx++) {
+                    cout << "\nItem " << idx + 1 << ":\n";
+                    items[idx].display();
+                }
+            }
+        }
+        else if (choice != 0) {
+            cout << "Invalid choice. Try again.\n";
+        }
+    } while (choice != 0);
+}
+
+/* ---------------------------------------------------------------
+   MODULE 2 MENU: Smart Package Selection
+--------------------------------------------------------------- */
+void packageMenu(vector<Package>& packages) {
+    // Pre-load a few standard package sizes (can be extended)
+    if (packages.empty()) {
+        packages.push_back(Package("Small Box", 15, 10, 8));
+        packages.push_back(Package("Medium Box", 25, 20, 15));
+        packages.push_back(Package("Large Box", 40, 30, 25));
+    }
+
+    int l, w, h;
+    cout << "\n--- SMART PACKAGE SELECTION ---\n";
+    cout << "Enter product dimensions:\n";
+    cout << "Length: ";
+    cin >> l;
+    cout << "Width: ";
+    cin >> w;
+    cout << "Height: ";
+    cin >> h;
+
+    bool found = false;
+    for (size_t i = 0; i < packages.size(); i++) {
+        if (packages[i].isSuitable(l, w, h)) {
+            cout << "Selected Package: " << packages[i].name << endl;
+            found = true;
+            break; // smallest suitable package (list is smallest -> largest)
+        }
+    }
+
+    if (!found)
+        cout << "No suitable package available." << endl;
+}
+
+/* ---------------------------------------------------------------
+   MODULE 3 MENU: Supplier Reorder
+--------------------------------------------------------------- */
+void supplierMenu(vector<Supplier>& suppliers) {
+    int choice;
+    do {
+        cout << "\n--- SUPPLIER REORDER ---\n";
+        cout << "1. Add Supplier\n";
+        cout << "2. Check Reorder Status for All Suppliers\n";
+        cout << "0. Back to Main Menu\n";
+        cout << "Enter choice: ";
+        cin >> choice;
+
+        if (cin.fail()) { clearInput(); choice = -1; }
+
+        if (choice == 1) {
+            string name;
+            int stock, minStock, maxStock;
+
+            cout << "Enter Supplier Name: ";
+            cin >> name;
+            cout << "Enter Current Stock: ";
+            cin >> stock;
+            cout << "Enter Minimum Stock: ";
+            cin >> minStock;
+            cout << "Enter Maximum Stock: ";
+            cin >> maxStock;
+
+            suppliers.push_back(Supplier(name, stock, minStock, maxStock));
+            cout << "Supplier added successfully.\n";
+        }
+        else if (choice == 2) {
+            if (suppliers.empty()) {
+                cout << "No suppliers recorded yet.\n";
+            } else {
+                cout << "\n--- SUPPLIER REORDER STATUS ---\n";
+                for (size_t i = 0; i < suppliers.size(); i++) {
+                    cout << endl;
+                    suppliers[i].checkReorder();
+                }
+            }
+        }
+        else if (choice != 0) {
+            cout << "Invalid choice. Try again.\n";
+        }
+    } while (choice != 0);
+}
+
+/* ---------------------------------------------------------------
+   MAIN MENU
+--------------------------------------------------------------- */
+int main() {
+    vector<PackagingItem> items;
+    vector<Package> packages;
+    vector<Supplier> suppliers;
+
+    int choice;
+    cout << "====================================================\n";
+    cout << " SUSTAINABLE E-COMMERCE PACKAGING & INVENTORY SYSTEM\n";
+    cout << "====================================================\n";
+
+    do {
+        cout << "\n================ MAIN MENU ================\n";
+        cout << "1. Inventory Tracking Module\n";
+        cout << "2. Smart Package Selection Module\n";
+        cout << "3. Supplier Reorder Module\n";
+        cout << "0. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        if (cin.fail()) { clearInput(); choice = -1; }
+
+        switch (choice) {
+            case 1:
+                inventoryMenu(items);
+                break;
+            case 2:
+                packageMenu(packages);
+                break;
+            case 3:
+                supplierMenu(suppliers);
+                break;
+            case 0:
+                cout << "\nExiting system. Thank you!\n";
+                break;
+            default:
+                cout << "Invalid choice. Please try again.\n";
+        }
+    } while (choice != 0);
+
+    return 0;
+}
